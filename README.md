@@ -27,9 +27,15 @@ O portal detecta a presença de cada arquivo quando sua aba é aberta. Enquanto 
 
 ## Habilitar o GitHub Pages
 
-Na primeira publicação, abra **Settings → Pages** e, em **Build and deployment**, selecione **Deploy from a branch**. Defina **Branch: main** e **Folder: /(root)** e salve. Nas publicações seguintes, os commits na `main` atualizam o site automaticamente.
+O repositório já contém o workflow `.github/workflows/deploy-pages.yml`, que publica automaticamente o conteúdo da branch `main` no GitHub Pages a cada atualização.
 
-Endereço previsto para o portal (após a ativação do GitHub Pages):
+**Ativação inicial (uma vez):**
+
+1. Acesse [Settings → Pages](https://github.com/diegofelipecorporativo-source/relatorios-educacionais-publicos-ruce/settings/pages).
+2. Em **Build and deployment → Source**, selecione **GitHub Actions**. Não selecione **Deploy from a branch**, pois há uma rotina de publicação própria.
+3. Abra a aba [Actions](https://github.com/diegofelipecorporativo-source/relatorios-educacionais-publicos-ruce/actions/workflows/deploy-pages.yml), selecione **Publicar portal RUCE no GitHub Pages** e, se necessário, use **Run workflow → main → Run workflow**. O workflow também roda a cada nova alteração na `main`.
+
+Endereço esperado após a publicação ser concluída:
 
 https://diegofelipecorporativo-source.github.io/relatorios-educacionais-publicos-ruce/
 
