@@ -23,6 +23,10 @@ jobs:
     steps:
       - name: Ler arquivos do repositório
         uses: actions/checkout@v6
+      - name: Conferir arquivos do portal
+        run: |
+          test -f index.html
+          test -f 03_painel_dispersao_estudantes.html
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
       - name: Preparar arquivos estaticos
