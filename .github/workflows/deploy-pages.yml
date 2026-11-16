@@ -26,6 +26,8 @@ jobs:
       - name: Conferir arquivos do portal
         run: |
           test -f index.html
+          test -f 01_historico_habilidades.html
+          test -f 02_comparativo_habilidades_por_escola.html
           test -f 03_painel_dispersao_estudantes.html
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
