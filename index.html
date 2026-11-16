@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal de relatórios educacionais | RUCE</title>
+<meta name="description" content="Portal RUCE: histórico de habilidades, comparativo por escola e dispersão de estudantes.">
+<style>
+:root{--ink:#182a2a;--muted:#667a78;--green:#047857;--dark:#063c2d;--border:#d8e5df}
+*{box-sizing:border-box}body{margin:0;background:#f3f8f5;color:var(--ink);font-family:Inter,system-ui,Arial,sans-serif}
+main{max-width:1540px;padding:12px 14px 24px;margin:auto}
+nav{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}button{background:white;border:1px solid var(--border);color:#294642;border-radius:10px;padding:10px 15px;cursor:pointer;font:700 14px Inter,system-ui,Arial}
+button:hover{border-color:var(--green)}button[aria-selected=true]{background:var(--green);border-color:var(--green);color:#fff}
+a{color:var(--green);font-size:13px;font-weight:700;text-decoration:none}
+section{position:relative;min-height:96px;background:#fff;border:1px solid var(--border);border-radius:15px;overflow:visible;box-shadow:0 10px 24px #033e1d0a}
+#state{position:absolute;z-index:2;top:8px;left:12px;right:12px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 18px;line-height:1.5;font-size:13px}
+#state[hidden]{display:none}
+#state.loading::before{content:"";width:14px;height:14px;flex:0 0 14px;border:2px solid #d7e7df;border-top-color:var(--green);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#viewer{display:block;width:100%;height:720px;border:0;visibility:visible}
+#viewer.preloading{opacity:0;pointer-events:none;height:0!important}
+@media(max-width:640px){.tabs{display:grid;width:100%;grid-template-columns:1fr}.tabs button{text-align:left}}
+</style>
+</head>
+<body>
+<main>
+<nav aria-label="Relatórios">
+<div class="tabs" role="tablist" aria-label="Relatórios disponíveis">
+<button role="tab" data-id="historico" aria-selected="false">Histórico de habilidades</button>
+<button role="tab" data-id="escolas" aria-selected="false">Comparativo por escola</button>
+<button role="tab" data-id="dispersao" aria-selected="false">Dispersão de estudantes</button>
+</div>
+
+</nav>
+<section aria-label="Visualização dos relatórios"><div id="state" role="status" aria-live="polite">Selecione uma aba acima para carregar o painel correspondente.</div><iframe id="viewer" class="preloading" title="Relatório selecionado" referrerpolicy="no-referrer"></iframe></section>
+</main>
+<script>
+(()=>{
+const reports=[
+{id:"historico",name:"Histórico de habilidades",file:"01_historico_habilidades.html"},
+{id:"escolas",name:"Comparativo por escola",file:"02_comparativo_habilidades_por_escola.html"},
+{id:"dispersao",name:"Dispersão de estudantes",file:"03_painel_dispersao_estudantes.html"}];
+const buttons=[...document.querySelectorAll('[role="tab"]')],viewer=document.getElementById('viewer'),state=document.getElementById('state');
+let seq=0,observer=null,resizeQueued=false;
+function message(s,loading=false){
+ state.textContent=s;state.hidden=false;state.classList.toggle('loading',loading);
+}
+function fitFrame(){
+ if(viewer.classList.contains('preloading'))return;
+ try{
+  const doc=viewer.contentDocument;
+  if(!doc || !doc.body || !doc.documentElement)return;
+  // Altura real do documento, inclusive gráficos Plotly renderizados após o carregamento.
+  // Mede o conteúdo real, sem usar a altura atual do próprio iframe.
+  const content=doc.querySelector('main.page') || doc.body;
+  const rect=content.getBoundingClientRect();
+  const h=Math.ceil(rect.bottom + (doc.defaultView?.scrollY || 0) + 8);
+  if(h>0){
+   const desired=Math.ceil(h),current=parseInt(viewer.style.height,10)||0;
+   if(Math.abs(desired-current)>8)viewer.style.height=desired+'px';
+  }
+ }catch(e){console.warn('Ajuste automático de altura indisponível:',e)}
+}
+function scheduleFit(){
+ if(resizeQueued)return;resizeQueued=true;
+ requestAnimationFrame(()=>{resizeQueued=false;fitFrame()});
+}
+function stopPrevious(){
+ if(observer){observer.disconnect();observer=null}
+ window.removeEventListener('resize',scheduleFit);
+ viewer.onload=null;
+}
+async function show(id,updateHistory=true){
+ const report=reports.find(r=>r.id===id);if(!report)return;
+ const ticket=++seq;
+ stopPrevious();
+ buttons.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.id===id)));
+ if(updateHistory)history.replaceState(null,'','?painel='+encodeURIComponent(id));
+ viewer.classList.add('preloading');
+ viewer.style.height='720px';
+ message('Carregando '+report.name+'…',true);
+ try{
+  const check=await fetch(report.file,{method:'HEAD',cache:'no-cache'});
+  if(ticket!==seq)return;
+  if(!check.ok){
+   if(check.status===404)throw Error('O arquivo '+report.file+' ainda não foi enviado. Adicione-o à raiz da branch main para habilitar este painel.');
+   throw Error('A consulta ao arquivo '+report.file+' falhou (HTTP '+check.status+').');
+  }
+  viewer.onload=async ()=>{
+   if(ticket!==seq)return;
+   const doc=viewer.contentDocument;
+   try{
+    // Mantém o HTML original, ocultando apenas a descrição que já havia sido solicitada.
+    doc?.querySelector('.hero > h1 + p')?.remove();
+    if(doc && window.ResizeObserver){
+      observer=new ResizeObserver(scheduleFit);
+      observer.observe(doc.querySelector('main.page')||doc.body);
+    }
+    // Aguarda os gráficos do Plotly; redimensiona antes da primeira exibição.
+    if(doc && (id==='escolas'||id==='dispersao')){
+      const graphDivs=[...doc.querySelectorAll('.plot')];
+      const childWindow=doc.defaultView;
+      const plotly=childWindow?.Plotly;
+      for(let wait=0;wait<20 && graphDivs.some(g=>!g._fullLayout);wait++){
+        if(ticket!==seq)return;
+        await new Promise(resolve=>setTimeout(resolve,150));
+      }
+      for(const graph of graphDivs){
+        if(ticket!==seq)return;
+        if(!graph._fullLayout||!plotly)continue;
+        try{
+          // A altura mínima do cartão deve acompanhar a altura real do SVG.
+          const svg=graph.querySelector('.svg-container');
+          const h=Math.ceil(Math.max(
+            graph._fullLayout.height||0,
+            svg?.getBoundingClientRect().height||0,
+            graph.getBoundingClientRect().height||0
+          ));
+          if(h>0 && graph.getBoundingClientRect().height+2<h)
+            graph.style.minHeight=h+'px';
+          // Recalcula medidas internas do Plotly após a inserção no iframe.
+          if(plotly.Plots?.resize)await plotly.Plots.resize(graph);
+          // O usuário relatou que Autoscale restaura as legendas: executa
+          // o mesmo controle uma única vez para cada gráfico recém-criado.
+          const autoscale=graph.querySelector('.modebar-btn[data-attr="zoom"][data-val="auto"]');
+          if(autoscale&&!graph.dataset.portalAutoscaleInicial){
+            graph.dataset.portalAutoscaleInicial='1';
+            autoscale.click();
+          }
+        }catch(err){console.warn('Ajuste do gráfico',graph.id,err)}
+      }
+    }
+   }catch(e){console.warn('Não foi possível estabilizar gráficos:',e)}
+   if(ticket!==seq)return;
+   viewer.classList.remove('preloading');
+   state.hidden=true;state.classList.remove('loading');
+   window.addEventListener('resize',scheduleFit);
+   scheduleFit();
+  };
+  viewer.src=report.file;
+ }catch(e){
+  if(ticket!==seq)return;
+  viewer.classList.add('preloading');
+  message(e.message);
+ }
+}
+buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.id)));
+// Ao abrir o portal, exibe o primeiro relatório automaticamente.
+// Os links com ?painel=historico, ?painel=escolas e ?painel=dispersao continuam funcionando.
+const initial=new URLSearchParams(location.search).get('painel');
+show(reports.some(r=>r.id===initial)?initial:'historico',false);
+})();
+</script>
+</body></html>
