@@ -148,7 +148,18 @@ buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.id)));
 // Ao abrir o portal, exibe o primeiro relatório automaticamente.
 // Os links com ?painel=historico, ?painel=escolas e ?painel=dispersao continuam funcionando.
 const initial=new URLSearchParams(location.search).get('painel');
-show(reports.some(r=>r.id===initial)?initial:'historico',false);
+async function openInitial(){
+ if(reports.some(r=>r.id===initial)){show(initial,false);return;}
+ message('Verificando os relatórios disponíveis…',true);
+ for(const report of reports){
+  try{
+   const result=await fetch(report.file,{method:'HEAD',cache:'no-cache'});
+   if(result.ok){show(report.id,false);return;}
+  }catch(e){console.warn('Arquivo ainda não disponível:',report.file,e);}
+ }
+ show('historico',false);
+}
+openInitial();
 })();
 </script>
 </body></html>
