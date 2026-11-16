@@ -9,8 +9,8 @@ Todos os arquivos abaixo devem ficar na **raiz da branch `main`**:
 | Arquivo | Finalidade | Situação |
 | --- | --- | --- |
 | `index.html` | Portal com navegação entre os três painéis | Criado |
-| `01_historico_habilidades.html` | Histórico de habilidades | A enviar |
-| `02_comparativo_habilidades_por_escola.html` | Comparativo por escola | A enviar |
+| `01_historico_habilidades.html` | Histórico de habilidades | Enviado |
+| `02_comparativo_habilidades_por_escola.html` | Comparativo por escola | Enviado |
 | `03_painel_dispersao_estudantes.html` | Dispersão de estudantes | Enviado |
 | `.nojekyll` | Dispensa o processamento Jekyll no GitHub Pages | Criado |
 
