@@ -11,7 +11,7 @@ Todos os arquivos abaixo devem ficar na **raiz da branch `main`**:
 | `index.html` | Portal com navegação entre os três painéis | Criado |
 | `01_historico_habilidades.html` | Histórico de habilidades | A enviar |
 | `02_comparativo_habilidades_por_escola.html` | Comparativo por escola | A enviar |
-| `03_painel_dispersao_estudantes.html` | Dispersão de estudantes | A enviar |
+| `03_painel_dispersao_estudantes.html` | Dispersão de estudantes | Enviado |
 | `.nojekyll` | Dispensa o processamento Jekyll no GitHub Pages | Criado |
 
 **Os nomes dos três arquivos HTML precisam coincidir exatamente** com os nomes acima. Não renomeie o `index.html` nem substitua os relatórios da RUCE pelos arquivos de outra rede.
