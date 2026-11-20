@@ -53,7 +53,7 @@ th{background:#f8faf9;color:#3d554a;font-weight:750}.empty{padding:24px;color:#7
 <div><label for="school">Escola <span style="font-weight:400;color:#76847d">(comparativo)</span></label><select id="school"><option value="">Todas</option></select></div>
 </div>
 <div class="toolbar"><span id="summary" class="status" role="status" aria-live="polite">Preparando dados do relatório…</span><button id="generate" type="button" disabled>Gerar PDF</button></div>
-<div id="downloadArea" aria-live="polite"><p>PDF preparado. Se o navegador não iniciar o download, <a href="#" id="downloadAgain" download="relatorio.pdf">baixe o arquivo aqui</a>.</p><details style="margin-top:8px"><summary id="morePreview">Visualizar o PDF</summary><iframe id="pdfPreview" title="Prévia do PDF"></iframe></details></div>
+<div id="downloadArea" aria-live="polite"><p>PDF preparado. Se o download não iniciar, <a href="#" id="downloadAgain" download="relatorio.pdf">baixar PDF</a> ou <a href="#" id="openPDF" target="_blank" rel="noopener noreferrer">abrir PDF em nova aba</a>.</p><details style="margin-top:8px"><summary id="morePreview">Visualizar o PDF</summary><iframe id="pdfPreview" title="Prévia do PDF"></iframe></details></div>
 </section>
 <section class="panel" aria-label="Prévia dos dados">
 <div class="preview-heading"><h2 style="margin:0">Prévia dos dados</h2><span class="summary" id="count"></span></div>
@@ -105,7 +105,7 @@ function render(){
  section('Dispersão de estudantes',['Tipo','Série','Área','Aplicação','n','Média','Mediana','DP'],data.stats.map(r=>[r.tipo,r.s,r.a,r.ap,r.n,r.media,r.mediana,r.dp]));
  if(!total){const x=document.createElement('div');x.className='empty';x.textContent='Não há registros para a seleção atual. Ajuste os filtros ou o conteúdo escolhido.';$('preview').append(x)}
 }
-inputs.forEach(id=>$(id).addEventListener('change',()=>{if(id==='serie'||id==='area')updateSchool();render()}));
+inputs.forEach(id=>$(id).addEventListener('change',()=>{$('downloadArea').style.display='none';$('pdfPreview').removeAttribute('src');if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}if(id==='serie'||id==='area')updateSchool();render()}));
 function pdfStr(value){return String(value??'').replace(/[\u2012-\u2015]/g,'-').replace(/\u2026/g,'...').replace(/\u00a0/g,' ').replace(/[^\u0020-\u007e\u00a1-\u00ff]/g,'?').replace(/[\\()]/g,'\\$&')}
 function toBytes(s){const a=[];for(let i=0;i<s.length;i++){const code=s.charCodeAt(i);a.push(code<256?code:63)}return Uint8Array.from(a)}
 function pdfFile(data){
@@ -161,7 +161,7 @@ $('generate').addEventListener('click',()=>{
    if(lastUrl)URL.revokeObjectURL(lastUrl);
    lastUrl=URL.createObjectURL(blob);
    const file='relatorio_'+db.project.toLowerCase()+'_'+new Date().toISOString().slice(0,10)+'.pdf';
-   const a=$('downloadAgain');a.href=lastUrl;a.download=file;
+   const a=$('downloadAgain');a.href=lastUrl;a.download=file;const open=$('openPDF');open.href=lastUrl;
    $('downloadArea').style.display='block';
    $('pdfPreview').src=lastUrl;$('pdfPreview').style.display='block';
    const link=document.createElement('a');link.href=lastUrl;link.download=file;link.style.display='none';document.body.append(link);link.click();link.remove();
