@@ -142,7 +142,7 @@ async function show(id,updateHistory=true){
    window.addEventListener('resize',scheduleFit);
    scheduleFit();
   };
-  viewer.src=report.file+(id==='impressao'?'?v=escolas-habilidades-v7-20261120':'');
+  viewer.src=report.file+(id==='impressao'?'?v=impressao-pdf-unico-20261120-v8':'');
  }catch(e){
   if(ticket!==seq)return;
   viewer.classList.add('preloading');
