@@ -99,8 +99,8 @@ async function loadSchoolRows(){
  }).then(data=>{
   if(!Array.isArray(data.registros)||!Array.isArray(data.escolas)||!Array.isArray(data.aplicacoes)||!Array.isArray(data.habilidades))throw Error('Base escolar incompatível');
   schoolRows=data.registros.map(r=>{
-   const skill=data.habilidades[r[4]],ap=data.aplicacoes[r[2]];
-   return {s:r[0],a:r[1],ap,e:data.escolas[r[3]],h:String(skill?.[0]||''),d:String(skill?.[1]||''),v:r[5]};
+   const skill=data.habilidades[r[4]],ap=data.aplicacoes[r[3]];
+   return {s:r[0],a:r[1],ap,e:data.escolas[r[2]],h:String(skill?.[0]||''),d:String(skill?.[1]||''),v:r[5]};
   }).filter(r=>r.s&&r.a&&r.ap&&r.e&&r.h&&Number.isFinite(Number(r.v)));
   if(!schoolRows.length&&db.escolas.length)throw Error('Base escolar sem habilidades individuais');
  }).catch(e=>{schoolError=e.message||String(e);throw e}).finally(()=>{schoolPromise=null});
@@ -193,6 +193,7 @@ function pdfFile(data){
    for(const g of sch.groups)table(g.s+' | '+g.a+' | '+g.ap,['Habilidade','Descritor','Resultado'],g.rows.map(r=>[r.h,r.d||'—',r.v.toLocaleString('pt-BR')+'%']),[80,330,66],7.5);
   }
  }
+ if(data.stats.length&&data.school.length)addPage();
  if(data.stats.length)table('Dispersão · resumo estatístico',['Tipo','Área','Série','Aplicação','n','Média','Mediana','DP','CV %'],data.stats.map(r=>[r.tipo,r.a,r.s,r.ap,r.n,r.media,r.mediana,r.dp,r.cv]),[35,25,46,138,40,36,40,36,36],7.3);
  pages.forEach((p,i)=>p.cmd.push('BT /F1 8 Tf 1 0 0 1 '+(RIGHT-90)+' 28 Tm ('+pdfStr('Página '+(i+1)+' de '+pages.length)+') Tj ET'));
  const objects=['<< /Type /Catalog /Pages 2 0 R >>','','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
