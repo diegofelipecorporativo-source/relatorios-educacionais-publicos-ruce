@@ -1,12 +1,287 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Impressão e PDF</title><style>
-*{box-sizing:border-box}body{margin:0;background:#f7f9f8;color:#1c302b;font:14px system-ui,Arial}main{max-width:1120px;margin:auto;padding:22px}h1{font-size:23px;margin:0 0 5px}p{color:#65756e;line-height:1.5}.panel{background:#fff;border:1px solid #dce6df;border-radius:12px;padding:18px;margin-top:14px}label{font-weight:650;display:block;margin-bottom:6px}select,input[type=text]{width:100%;padding:10px;border:1px solid #ccd9d1;border-radius:7px;background:white}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}button{padding:10px 14px;background:white;border:1px solid #b8d0c3;border-radius:8px;color:#14543b;font-weight:650;cursor:pointer}button.primary{background:#047857;color:white}button:disabled{opacity:.5;cursor:not-allowed}.small{font-size:12px}#frame{display:none;width:100%;height:620px;border:1px solid #dce6df;border-radius:8px;margin-top:12px}#choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:12px}.choice{border:1px solid #e1e8e4;border-radius:8px;padding:10px;display:flex;gap:9px;font-weight:400;align-items:flex-start}.choice input{accent-color:#047857}#status{min-height:22px}@media(max-width:600px){main{padding:12px}.panel{padding:12px}}
-</style></head><body><main><h1>Impressão e PDF</h1><p>Selecione os resultados dos painéis existentes. Sem análises automáticas.</p><div class="panel"><div class="grid"><div><label for="source">Módulo</label><select id="source"><option value="01_historico_habilidades.html">Histórico de habilidades</option><option value="02_comparativo_habilidades_por_escola.html">Comparativo por escola</option><option value="03_painel_dispersao_estudantes.html">Dispersão de estudantes</option></select></div><div><label for="title">Título do documento</label><input id="title" type="text" value="Relatório educacional"></div></div><div class="actions"><button class="primary" id="load">Abrir painel</button><button id="refresh" disabled>Atualizar conteúdos</button></div><p id="status" role="status">O painel só será carregado quando solicitado, para reduzir o consumo de memória.</p><iframe id="frame" title="Painel de origem"></iframe></div><div class="panel"><label>Conteúdos para impressão</label><div id="choices"><p>Abra o painel para escolher os elementos.</p></div><div class="actions"><button id="all" disabled>Selecionar todos</button><button id="clear" disabled>Limpar</button><button class="primary" id="print" disabled>Imprimir / salvar PDF</button></div><p class="small">O navegador oferece a opção “Salvar como PDF” na janela de impressão. A4, com margens e quebras de página.</p></div></main>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Impressão e PDF | Relatórios educacionais</title>
+<style>
+:root{--green:#047857;--ink:#21352d;--muted:#68786f;--line:#dae5de;--bg:#f7faf8}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg)}
+main{max-width:1180px;margin:0 auto;padding:24px 20px 48px}
+h1{font-size:25px;font-weight:750;letter-spacing:-.035em;margin:0 0 4px}
+header p{margin:0;color:var(--muted)}
+.panel{margin-top:17px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:13px}
+h2{font-size:14px;font-weight:700;margin:0 0 14px}
+.modes{display:flex;flex-wrap:wrap;gap:8px}
+.modes button{background:#fff;border:1px solid #cfddd4;border-radius:9px;padding:11px 16px;color:#355348;font:650 14px system-ui,Arial;cursor:pointer}
+.modes button[aria-selected=true]{background:#047857;border-color:#047857;color:white}
+.modes button:focus-visible,select:focus-visible,input:focus-visible,.download:focus-visible{outline:3px solid #9adebb;outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.field{min-width:0}
+label{display:block;font-weight:650;margin:0 0 6px;font-size:12px;color:#465b51}
+select,input[type=text]{width:100%;height:41px;border:1px solid #cbdad0;border-radius:8px;color:#21352d;background:white;padding:8px 10px;font:14px system-ui,Arial}
+select{cursor:pointer;overflow:hidden;text-overflow:ellipsis}
+[hidden]{display:none!important}
+.bottom{margin-top:16px;display:flex;gap:12px;justify-content:space-between;align-items:end;flex-wrap:wrap}
+.title-field{flex:1 1 300px;max-width:580px}
+.download{border:0;border-radius:9px;background:#047857;color:#fff;font:700 14px system-ui,Arial;padding:12px 23px;cursor:pointer;white-space:nowrap}
+.download:disabled{opacity:.6;cursor:default}
+.note{color:var(--muted);font-size:12px;margin:7px 0 0}
+.preview-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.preview-head h2{margin:0}
+#count{font-size:13px;color:#52665c}
+.scroll{overflow:auto;max-height:365px;border:1px solid #e3ebe5;border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;background:#f2f7f4;color:#445c50;position:sticky;top:0;white-space:nowrap}
+th,td{padding:10px 11px;border-bottom:1px solid #edf1ee;vertical-align:top}
+td{max-width:380px}
+tbody tr:last-child td{border-bottom:0}
+#status{margin-top:10px;min-height:20px;font-size:12px;color:#63766c}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:470px){main{padding:15px 12px 28px}.panel{padding:14px}.grid{grid-template-columns:1fr}.modes{display:grid;grid-template-columns:1fr}.modes button{text-align:left}.download{width:100%}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Impressão e PDF</h1><p>Escolha os dados, aplique os filtros desejados e baixe o relatório em PDF.</p></header>
+<section class="panel" aria-label="Tipo de relatório">
+  <h2>Tipo de relatório</h2>
+  <div class="modes" role="tablist" aria-label="Relatórios disponíveis">
+    <button type="button" data-mode="historico" role="tab" aria-selected="true">Histórico de habilidades</button>
+    <button type="button" data-mode="escolas" role="tab" aria-selected="false">Comparativo por escola</button>
+    <button type="button" data-mode="estudantes" role="tab" aria-selected="false">Resultados dos estudantes</button>
+  </div>
+</section>
+<section class="panel" aria-label="Filtros e exportação">
+  <h2>Dados do documento</h2>
+  <div class="grid">
+    <div class="field"><label for="serie">Série</label><select id="serie"></select></div>
+    <div class="field"><label for="area">Componente curricular</label><select id="area"></select></div>
+    <div class="field"><label for="aplicacao">Aplicação</label><select id="aplicacao"></select></div>
+    <div class="field" id="escolaField" hidden><label for="escola">Escola</label><select id="escola"></select></div>
+    <div class="field" id="tabelaField" hidden><label for="tabela">Informações</label><select id="tabela"><option value="resumo">Resumo estatístico</option><option value="niveis">Níveis de aprendizagem</option></select></div>
+  </div>
+  <div class="bottom">
+    <div class="title-field"><label for="titulo">Título do relatório</label><input id="titulo" type="text" maxlength="110" value="Relatório educacional"></div>
+    <button type="button" id="download" class="download" disabled>Baixar PDF</button>
+  </div>
+  <p class="note">O arquivo PDF é gerado neste dispositivo, sem abrir outro painel ou enviar informações a um servidor.</p>
+  <div id="status" role="status" aria-live="polite">Preparando os dados...</div>
+</section>
+<section class="panel" aria-label="Prévia das informações">
+  <div class="preview-head"><h2>Prévia dos resultados</h2><span id="count"></span></div>
+  <div class="scroll"><table><thead id="previewHead"></thead><tbody id="previewBody"><tr><td>Carregando informações...</td></tr></tbody></table></div>
+  <p class="note">A prévia mostra até oito registros. O PDF inclui todos os registros que atendem aos filtros.</p>
+</section>
+</main>
 <script>
-(()=>{'use strict';const $=id=>document.getElementById(id);let elements=[];const frame=$('frame');function status(t){$('status').textContent=t}
-function find(){const doc=frame.contentDocument;if(!doc?.body){status('O painel ainda não está pronto.');return}status('Identificando seções do relatório…');const roots=[...doc.querySelectorAll('main.page > .section, main.page > .panel, main.page > .cards, main.page > section, main.page > div.section, main.page > div.panel')];elements=roots.filter(e=>!e.matches('.filters-panel')&&!e.querySelector('.filters-toggle')&&e.getBoundingClientRect().height>25).slice(0,40);if(!elements.length){elements=[...doc.querySelectorAll('.section,.panel')].filter(e=>!e.closest('.filters-panel,.hero')&&e.getBoundingClientRect().height>40).slice(0,30)}const list=$('choices');list.replaceChildren();elements.forEach((e,i)=>{const label=document.createElement('label');label.className='choice';const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.value=i;const t=document.createElement('span');t.textContent=(e.querySelector('h2,h3,.panel-head,caption')?.textContent||'Seção '+(i+1)).replace(/\s+/g,' ').trim().slice(0,95);label.append(cb,t);list.append(label)});if(!elements.length)list.textContent='Nenhuma seção encontrada. Aguarde o painel e tente novamente.';['all','clear','print'].forEach(id=>$(id).disabled=!elements.length);status(elements.length+' seção(ões) identificada(s).')}
-$('load').onclick=()=>{elements=[];frame.style.display='block';frame.style.height='620px';$('refresh').disabled=true;['all','clear','print'].forEach(id=>$(id).disabled=true);$('choices').textContent='Carregando…';status('Carregando painel; aguarde a renderização dos gráficos.');frame.onload=()=>{try{if(!frame.contentDocument?.body)throw Error('Documento não acessível');$('refresh').disabled=false;status('Aplique os filtros no painel e clique em Atualizar conteúdos.');}catch(e){status('Falha ao abrir: '+e.message)}};frame.src=$('source').value};
-$('refresh').onclick=find;$('all').onclick=()=>document.querySelectorAll('#choices input').forEach(c=>c.checked=true);$('clear').onclick=()=>document.querySelectorAll('#choices input').forEach(c=>c.checked=false);
-function printable(el){const clone=el.cloneNode(true);clone.querySelectorAll('button,input,select,textarea,.modebar,.plotly-notifier,script').forEach(n=>n.remove());const originalPlots=el.querySelectorAll('.js-plotly-plot');const clonedPlots=clone.querySelectorAll('.js-plotly-plot');originalPlots.forEach((p,i)=>{const svg=p.querySelector('svg.main-svg');if(svg&&clonedPlots[i]){const copy=svg.cloneNode(true);copy.removeAttribute('style');copy.setAttribute('width','900');copy.setAttribute('height',svg.getAttribute('height')||'520');clonedPlots[i].replaceWith(copy)}});if(el.matches('.js-plotly-plot')){const svg=el.querySelector('svg.main-svg');if(svg)return svg.cloneNode(true).outerHTML}return clone.outerHTML}
-$('print').onclick=()=>{const ids=[...document.querySelectorAll('#choices input:checked')].map(x=>+x.value);if(!ids.length){status('Selecione pelo menos um conteúdo.');return}try{const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));const parts=ids.map(i=>'<section class="block">'+printable(elements[i])+'</section>').join('');const title=esc($('title').value||'Relatório educacional');const origin=esc($('source').selectedOptions[0].text);const doc='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+title+'</title><style>@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font:10pt Arial,sans-serif;color:#17251f;margin:20px auto;max-width:900px;padding:15px}h1{font-size:18pt}h2{font-size:12pt}p{font-size:9pt}.toolbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:12px 0;margin-bottom:20px;display:flex;gap:10px}.toolbar button{padding:11px 17px;background:#047857;color:white;border:0;border-radius:7px;cursor:pointer}.block{margin:0 0 10mm;break-inside:avoid;page-break-inside:avoid;overflow:visible}.block *{max-width:100%!important;box-shadow:none!important}svg,img,canvas{max-width:100%!important;height:auto!important}table{width:100%;border-collapse:collapse;font-size:8pt}td,th{border:1px solid #ddd;padding:4px}.modebar,.block button,.block select,.block input{display:none!important}@media print{body{margin:0;padding:0;max-width:none}.toolbar{display:none!important}}</style></head><body><div class="toolbar"><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></div><h1>'+title+'</h1><p>'+origin+' · '+new Date().toLocaleDateString('pt-BR')+'</p>'+parts+'</body></html>';const blob=new Blob([doc],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='relatorio-impressao-'+new Date().toISOString().replace(/[:.]/g,'-')+'.html';a.textContent='Baixar documento para impressão';a.style.display='none';document.body.append(a);a.click();a.remove();status('Documento preparado e baixado. Abra o arquivo HTML e clique em Imprimir / salvar PDF.');}catch(e){status('Erro ao preparar documento: '+e.message)}};
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var paths={historico:"04_dados_historico.json",escolas:"04_dados_escolas.json",estudantes:"04_dados_estudantes.json"};
+var defaults={historico:"Histórico de habilidades",escolas:"Comparativo de habilidades por escola",estudantes:"Resultados dos estudantes"};
+var store={},mode="historico",view=null,loadedMode=null,seq=0;
+var collator=new Intl.Collator("pt-BR",{numeric:true,sensitivity:"base"});
+function say(message){$("status").textContent=message}
+function distinct(items){return [...new Set(items.filter(x=>x!==null&&x!==undefined&&String(x)!==""))].sort(collator.compare)}
+function setOptions(id,pairs,allLabel){var el=$(id),prev=el.value;el.replaceChildren();var base=document.createElement("option");base.value="";base.textContent=allLabel;el.append(base);pairs.forEach(function(pair){var opt=document.createElement("option");opt.value=pair[0];opt.textContent=pair[1];el.append(opt)});if([...el.options].some(x=>x.value===prev))el.value=prev;else el.value=""}
+function stringsOptions(list){return distinct(list).map(x=>[String(x),String(x)])}
+function fillFilters(data){
+  $("serie").value="";$("area").value="";$("aplicacao").value="";$("escola").value="";$("tabela").value="resumo";
+  $("escolaField").hidden=mode!=="escolas";
+  $("tabelaField").hidden=mode!=="estudantes";
+  if(mode==="historico"){
+    setOptions("serie",stringsOptions(data.registros.map(r=>r[0])),"Todas as séries");
+    setOptions("area",stringsOptions(data.registros.map(r=>r[1])),"Todos");
+    setOptions("aplicacao",data.edicoes.map(e=>[e.key,e.label]),"Todas as aplicações");
+  }else if(mode==="escolas"){
+    setOptions("serie",stringsOptions(data.series),"Todas as séries");
+    setOptions("area",stringsOptions(["LP","MT"]),"Todos");
+    setOptions("aplicacao",stringsOptions(data.aplicacoes),"Todas as aplicações");
+    setOptions("escola",stringsOptions(data.escolas),"Todas as escolas");
+  }else{
+    var rows=data.resumo.registros.concat(data.niveis.registros);
+    setOptions("serie",stringsOptions(rows.map(r=>r[2])),"Todas as séries");
+    setOptions("area",stringsOptions(rows.map(r=>r[1]==="LP"||r[1]==="MT"?r[1]:r[0]).filter(x=>x==="LP"||x==="MT")),"Todos");
+    setOptions("aplicacao",stringsOptions(rows.map(r=>r[3])),"Todas as aplicações");
+  }
+}
+function ratio(x){return x===null||x===undefined?"—":(Number(x)*100).toLocaleString("pt-BR",{maximumFractionDigits:1,minimumFractionDigits:1})+"%"}
+function percent(x){return x===null||x===undefined?"—":Number(x).toLocaleString("pt-BR",{maximumFractionDigits:1,minimumFractionDigits:1})+"%"}
+function build(){
+ var data=store[mode],serie=$("serie").value,area=$("area").value,ap=$("aplicacao").value,escola=$("escola").value;
+ if(!data)return null;
+ var headers=[],rows=[],weights=[];
+ if(mode==="historico"){
+   var ed=data.edicoes.map((v,i)=>({edition:v,index:i})).filter(x=>!ap||x.edition.key===ap);
+   headers=["Série","Área","Habilidade","Descrição"].concat(ed.map(x=>x.edition.label));
+   weights=[.9,.55,1.05,4.4].concat(ed.map(()=>.92));
+   rows=data.registros.filter(r=>(!serie||r[0]===serie)&&(!area||r[1]===area)&&(!ap||ed.some(x=>r[6+x.index]!==null&&r[6+x.index]!==undefined))).map(r=>[r[0],r[1],r[2],r[3]].concat(ed.map(x=>ratio(r[6+x.index]))));
+ }else if(mode==="escolas"){
+   var schoolId=data.escolas.indexOf(escola);
+   if(escola){
+     headers=["Série","Área","Escola","Aplicação","Habilidade","Descrição","Resultado (%)"];
+     weights=[.75,.48,2.5,1.35,.85,3.2,.85];
+     rows=data.registros.filter(r=>r[2]===schoolId&&(!serie||r[0]===serie)&&(!area||r[1]===area)&&(!ap||data.aplicacoes[r[3]]===ap)).map(r=>[r[0],r[1],data.escolas[r[2]],data.aplicacoes[r[3]],data.habilidades[r[4]][0],data.habilidades[r[4]][1],percent(r[5])]);
+   }else{
+     headers=["Série","Área","Aplicação","Habilidade","Descrição","Média escolas (%)","Nº escolas"];
+     weights=[.85,.55,1.45,1.02,3.7,1.12,.85];
+     rows=data.medias.filter(r=>(!serie||r[0]===serie)&&(!area||r[1]===area)&&(!ap||data.aplicacoes[r[2]]===ap)).map(r=>[r[0],r[1],data.aplicacoes[r[2]],data.habilidades[r[3]][0],data.habilidades[r[3]][1],percent(r[4]),String(r[5])]);
+   }
+ }else{
+   var isLevels=$("tabela").value==="niveis",t=isLevels?data.niveis:data.resumo;
+   var columns=isLevels?[0,1,2,3,4,5,7,8,9,10,11,12,13,14]:[0,1,2,3,4,5,6,7,8,9,10,11];
+   headers=columns.map(i=>t.colunas[i]);
+   weights=headers.map(h=>h==="Aplicação"?2.3:h==="Série"?1.05:h==="Tipo"?.7:h==="Nível"?1.3:h==="Escala"?.85:h==="Média"||h==="Mediana"?1.03:.75);
+   rows=t.registros.filter(r=>(!serie||r[2]===serie)&&(!area||(isLevels?r[0]:r[1])===area)&&(!ap||r[3]===ap)).map(r=>columns.map(i=>r[i]));
+ }
+ rows.sort(function(a,b){return collator.compare(a[0],b[0])||collator.compare(a[1],b[1])||collator.compare(a[2],b[2])||collator.compare(a[3],b[3])});
+ return {headers:headers,weights:weights,rows:rows,base:data.base||"",name:defaults[mode]};
+}
+function render(){
+ if(!store[mode])return;
+ view=build();
+ var head=$("previewHead"),body=$("previewBody");head.replaceChildren();body.replaceChildren();
+ var tr=document.createElement("tr");view.headers.forEach(function(h){var th=document.createElement("th");th.textContent=h;tr.append(th)});head.append(tr);
+ view.rows.slice(0,8).forEach(function(r){var tr=document.createElement("tr");r.forEach(function(v){var td=document.createElement("td");td.textContent=v===null?"—":String(v);tr.append(td)});body.append(tr)});
+ if(!view.rows.length){var empty=document.createElement("tr"),td=document.createElement("td");td.colSpan=view.headers.length;td.textContent="Nenhum registro encontrado com os filtros selecionados.";empty.append(td);body.append(empty)}
+ $("count").textContent=view.rows.length.toLocaleString("pt-BR")+" registro(s)";
+ $("download").disabled=!view.rows.length;
+ say(view.base+" · Os filtros são aplicados automaticamente.");
+}
+async function choose(which){
+ mode=which;seq++;var own=seq,buttons=document.querySelectorAll("[data-mode]");
+ buttons.forEach(b=>b.setAttribute("aria-selected",String(b.dataset.mode===mode)));
+ $("titulo").value=defaults[mode];$("download").disabled=true;view=null;
+ if(store[mode]){fillFilters(store[mode]);render();return}
+ say("Carregando dados do relatório...");$("count").textContent="";$("previewHead").replaceChildren();$("previewBody").replaceChildren();
+ try{
+  var res=await fetch(paths[mode],{cache:"no-cache"});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  var data=await res.json();
+  if(own!==seq)return;
+  store[mode]=data;loadedMode=mode;fillFilters(data);render();
+ }catch(e){if(own!==seq)return;say("Não foi possível carregar os dados. Atualize a página e tente novamente. ("+e.message+")");}
+}
+function cp1252(input){
+ var special={8364:128,8218:130,402:131,8222:132,8230:133,8224:134,8225:135,710:136,8240:137,352:138,8249:139,338:140,381:142,8216:145,8217:146,8220:147,8221:148,8226:149,8211:150,8212:151,732:152,8482:153,353:154,8250:155,339:156,382:158,376:159};
+ var result="";
+ for(var ch of String(input)){var cp=ch.codePointAt(0);result+=String.fromCharCode(cp<=255?cp:(special[cp]||63))}
+ return result;
+}
+function pdfEsc(str){return cp1252(str).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)").replace(/[\r\n]/g," ")}
+function wrapWords(value,limit,maxLines){
+ var text=String(value===null||value===undefined?"—":value).replace(/\s+/g," ").trim();
+ var words=text.split(" "),lines=[],line="";
+ words.forEach(function(w){
+  while(w.length>limit){if(line){lines.push(line);line=""}lines.push(w.slice(0,limit));w=w.slice(limit)}
+  if(!w)return;
+  if(!line)line=w;
+  else if(line.length+1+w.length<=limit)line+=" "+w;
+  else {lines.push(line);line=w}
+ });
+ if(line)lines.push(line);
+ if(!lines.length)lines=[""];
+ if(lines.length>maxLines){lines=lines.slice(0,maxLines);lines[maxLines-1]=lines[maxLines-1].slice(0,Math.max(1,limit-2))+".."}
+ return lines;
+}
+function makePdf(report,title,filterText){
+ var PAGE_W=842,PAGE_H=595,M=34,TABLE_W=PAGE_W-2*M,cols=report.headers;
+ var weightSum=report.weights.reduce((a,b)=>a+b,0);
+ var widths=report.weights.map(x=>TABLE_W*x/weightSum);
+ var xs=[],position=M;widths.forEach(function(w){xs.push(position);position+=w});
+ var pages=[],commands=[],y=0,bodyCount=0;
+ function rect(x,y,w,h,color){
+  commands.push(color+" rg "+x.toFixed(2)+" "+y.toFixed(2)+" "+w.toFixed(2)+" "+h.toFixed(2)+" re f");
+ }
+ function line(x1,y1,x2,y2){commands.push("0.85 0.89 0.87 RG 0.4 w "+x1.toFixed(2)+" "+y1.toFixed(2)+" m "+x2.toFixed(2)+" "+y2.toFixed(2)+" l S")}
+ function text(x,y,string,size,bold,color){
+  commands.push("BT /F"+(bold?"2":"1")+" "+size.toFixed(1)+" Tf "+(color||"0.12 0.21 0.16")+" rg 1 0 0 1 "+x.toFixed(2)+" "+y.toFixed(2)+" Tm ("+pdfEsc(string)+") Tj ET");
+ }
+ function header(){
+  rect(0,532,PAGE_W,63,"0.95 0.98 0.96");
+  text(M,561,title.slice(0,110),15,true);
+  text(M,541,(report.base+" · "+report.name).slice(0,140),8,false,"0.37 0.45 0.41");
+  text(M,521,filterText.slice(0,150),8,false,"0.32 0.40 0.36");
+  rect(M,488,TABLE_W,25,"0.88 0.94 0.90");
+  var x=M;
+  cols.forEach(function(h,i){
+   var size=cols.length>12?6.5:7.5;
+   var limit=Math.max(4,Math.floor((widths[i]-7)/(size*.51)));
+   text(x+4,497,wrapWords(h,limit,1)[0],size,true);
+   x+=widths[i];
+  });
+  y=487;
+ }
+ function newPage(){
+  commands=[];
+  pages.push(commands);
+  header();
+ }
+ newPage();
+ report.rows.forEach(function(row,index){
+  var lines=row.map(function(value,i){
+   var size=cols.length>12?6.2:7.2;
+   var maxChars=Math.max(4,Math.floor((widths[i]-8)/(size*.51)));
+   return wrapWords(value,maxChars,4);
+  });
+  var height=Math.max(19,Math.max.apply(null,lines.map(x=>x.length))*10+7);
+  if(y-height<43)newPage();
+  if(index%2===1)rect(M,y-height,TABLE_W,height,"0.975 0.984 0.979");
+  lines.forEach(function(valueLines,i){valueLines.forEach(function(part,k){text(xs[i]+4,y-12-k*9,part,cols.length>12?6.2:7.2,false)})});
+  line(M,y-height,PAGE_W-M,y-height);
+  y-=height;
+  bodyCount++;
+ });
+ pages.forEach(function(cmd,i){var old=commands;commands=cmd;text(PAGE_W-M-82,22,"Página "+(i+1)+" / "+pages.length,8,false,"0.40 0.49 0.43");commands=old});
+ var objects=["<< /Type /Catalog /Pages 2 0 R >>","","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+ var pageIds=[];
+ pages.forEach(function(cmd){
+  var stream=cmd.join("\n")+"\n",sObj=objects.length+1;objects.push("<< /Length "+stream.length+" >>\nstream\n"+stream+"endstream");
+  var pObj=objects.length+1;objects.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PAGE_W+" "+PAGE_H+"] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+sObj+" 0 R >>");
+  pageIds.push(pObj+" 0 R");
+ });
+ objects[1]="<< /Type /Pages /Kids ["+pageIds.join(" ")+"] /Count "+pages.length+" >>";
+ var output="%PDF-1.4\n%\xE2\xE3\xCF\xD3\n",offsets=[];
+ objects.forEach(function(obj,i){offsets.push(output.length);output+=(i+1)+" 0 obj\n"+obj+"\nendobj\n"});
+ var xref=output.length;
+ output+="xref\n0 "+(objects.length+1)+"\n0000000000 65535 f \n";
+ offsets.forEach(function(off){output+=String(off).padStart(10,"0")+" 00000 n \n"});
+ output+="trailer\n<< /Size "+(objects.length+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
+ return Uint8Array.from(output,function(char){return char.charCodeAt(0)&255});
+}
+function filtersText(){
+ var pairs=[["Série",$("serie")],["Área",$("area")],["Aplicação",$("aplicacao")]];
+ if(mode==="escolas")pairs.push(["Escola",$("escola")]);
+ if(mode==="estudantes")pairs.push(["Tabela",$("tabela")]);
+ return pairs.map(function(item){return item[0]+": "+(item[1].selectedOptions[0]?.text||"Todas")}).join("  ·  ");
+}
+function download(){
+ if(!view||!view.rows.length)return;
+ var button=$("download");button.disabled=true;button.textContent="Gerando PDF...";
+ say("Organizando "+view.rows.length.toLocaleString("pt-BR")+" registros...");
+ setTimeout(function(){
+  try{
+   var title=$("titulo").value.trim()||defaults[mode];
+   var bytes=makePdf(view,title,filtersText());
+   var blob=new Blob([bytes],{type:"application/pdf"});
+   var url=URL.createObjectURL(blob);
+   var a=document.createElement("a");
+   var simple=title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9-_ ]/g,"").trim().replace(/\s+/g,"_").slice(0,45);
+   a.download=(simple||"relatorio")+".pdf";a.href=url;document.body.append(a);a.click();a.remove();
+   setTimeout(function(){URL.revokeObjectURL(url)},60000);
+   say("PDF preparado. Verifique a pasta de downloads do navegador.");
+  }catch(e){say("Falha ao gerar o PDF: "+e.message);console.error(e)}
+  button.textContent="Baixar PDF";button.disabled=false;
+ },40);
+}
+document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",function(){if(mode!==b.dataset.mode)choose(b.dataset.mode)}));
+["serie","area","aplicacao","escola"].forEach(id=>$(id).addEventListener("change",render));
+$("tabela").addEventListener("change",render);
+$("download").addEventListener("click",download);
+choose("historico");
 })();
-</script></body></html>
+</script>
+</body>
+</html>
