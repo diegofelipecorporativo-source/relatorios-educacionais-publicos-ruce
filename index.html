@@ -41,7 +41,7 @@ const reports=[
 {id:"historico",name:"Histórico de habilidades",file:"01_historico_habilidades.html"},
 {id:"escolas",name:"Comparativo por escola",file:"02_comparativo_habilidades_por_escola.html"},
 {id:"dispersao",name:"Dispersão de estudantes",file:"03_painel_dispersao_estudantes.html"},
-{id:"impressao",name:"Impressão e PDF",file:"04_relatorios_impressao.html"}];
+{id:"impressao",name:"Impressão e PDF",file:"04_impressao_pdf.html"}];
 const buttons=[...document.querySelectorAll('[role="tab"]')],viewer=document.getElementById('viewer'),state=document.getElementById('state');
 let seq=0,observer=null,resizeQueued=false;
 function message(s,loading=false){
@@ -94,6 +94,9 @@ async function show(id,updateHistory=true){
    try{
     // Mantém o HTML original, ocultando apenas a descrição que já havia sido solicitada.
     doc?.querySelector('.hero > h1 + p')?.remove();
+    // Remove qualquer aviso antigo que possa ter sido retido no cache do iframe.
+    doc?.getElementById('embedWarning')?.remove();
+    doc?.getElementById('external')?.remove();
     if(doc && window.ResizeObserver){
       observer=new ResizeObserver(scheduleFit);
       observer.observe(doc.querySelector('main.page')||doc.body);
@@ -139,7 +142,7 @@ async function show(id,updateHistory=true){
    window.addEventListener('resize',scheduleFit);
    scheduleFit();
   };
-  viewer.src=report.file+(id==='impressao'?'?v=impressao-sem-link-20261120':'');
+  viewer.src=report.file+(id==='impressao'?'?v=impressao-limpa-2-20261120':'');
  }catch(e){
   if(ticket!==seq)return;
   viewer.classList.add('preloading');
