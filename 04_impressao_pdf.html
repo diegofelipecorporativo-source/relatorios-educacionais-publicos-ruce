@@ -27,7 +27,7 @@ button:disabled{background:#9cafaa;cursor:wait}button:focus-visible,select:focus
 .mini:last-child{border-bottom:0}.mini h3{font-size:13px;margin:0 0 8px}.mini p{margin:0}
 .tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:430px;font-size:11px}
 th,td{text-align:left;border-bottom:1px solid #eef1ef;padding:8px 7px;vertical-align:top}
-th{background:#f8faf9;color:#3d554a;font-weight:750}.empty{padding:24px;color:#71827a;text-align:center;font-size:13px}
+th{background:#f8faf9;color:#3d554a;font-weight:750}.empty{padding:24px;color:#71827a;text-align:center;font-size:13px}[hidden]{display:none!important}.note{padding:9px 16px;color:#64756d;font-size:12px}
 #downloadArea{display:none;margin-top:14px}#downloadArea a{font-weight:650;color:#047857}
 #pdfPreview{width:100%;height:450px;border:1px solid #dce6df;border-radius:8px;margin-top:9px;display:none}
 #morePreview{cursor:pointer;color:#325544;font-size:12px}
@@ -43,14 +43,14 @@ th{background:#f8faf9;color:#3d554a;font-weight:750}.empty{padding:24px;color:#7
 <h2>O que incluir no relatório?</h2>
 <div class="options">
 <label class="option"><input type="checkbox" id="useHistory" checked><span><strong>Histórico de habilidades</strong><small>Habilidades e resultados por aplicação</small></span></label>
-<label class="option"><input type="checkbox" id="useSchools"><span><strong>Comparativo por escola</strong><small>Médias das habilidades por unidade escolar</small></span></label>
+<label class="option"><input type="checkbox" id="useSchools"><span><strong>Comparativo por escola</strong><small>Resultados de cada habilidade separados por escola</small></span></label>
 <label class="option"><input type="checkbox" id="useDisp"><span><strong>Dispersão de estudantes</strong><small>Resumo estatístico por série e aplicação</small></span></label>
 </div>
 <div class="filters">
 <div><label for="serie">Série</label><select id="serie"><option value="">Todas</option></select></div>
 <div><label for="area">Componente</label><select id="area"><option value="">Todos</option><option value="LP">Língua Portuguesa</option><option value="MT">Matemática</option></select></div>
 <div><label for="app">Aplicação</label><select id="app"><option value="">Todas</option></select></div>
-<div><label for="school">Escola <span style="font-weight:400;color:#76847d">(comparativo)</span></label><select id="school"><option value="">Todas</option></select></div>
+<div id="schoolFilterField" hidden><label for="school">Escola</label><select id="school"><option value="">Todas</option></select></div>
 </div>
 <div class="toolbar"><span id="summary" class="status" role="status" aria-live="polite">Preparando dados do relatório…</span><button id="generate" type="button" disabled>Gerar PDF</button></div>
 <div id="downloadArea" aria-live="polite"><p>PDF preparado. Se o download não iniciar, <a href="#" id="downloadAgain" download="relatorio.pdf">baixar PDF</a> ou <a href="#" id="openPDF" target="_blank" rel="noopener noreferrer">abrir PDF em nova aba</a>.</p><details style="margin-top:8px"><summary id="morePreview">Visualizar o PDF</summary><iframe id="pdfPreview" title="Prévia do PDF"></iframe></details></div>
@@ -65,7 +65,7 @@ th{background:#f8faf9;color:#3d554a;font-weight:750}.empty{padding:24px;color:#7
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),inputs=['serie','area','app','school','useHistory','useSchools','useDisp'];
-let db=null,lastUrl=null;
+let db=null,lastUrl=null,schoolRows=null,schoolPromise=null,schoolError='';
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/_/g,' ').replace(/\s+/g,' ').trim();
 const serieKey=s=>(String(s||'').match(/\d+/)||[''])[0];
 const appKey=s=>{const t=norm(s);const year=(t.match(/20\d\d/)||[''])[0];let kind=t.includes('intermediaria')||/\bavi\b/.test(t)?'i':t.includes('saida')||/\bavs\b/.test(t)?'s':t.includes('entrada')||/\bave\b/.test(t)?'e':t.includes('2025')||t.includes('2026')?'o':'';return year&&kind?year+'-'+kind:''};
@@ -79,14 +79,50 @@ function init(){
  options($('serie'),series.map(s=>[s,s+'º ano']),'Todas');
  const appValues=[...new Set([...db.edicoes.map(x=>appKey(x.label)),...db.escolas.map(x=>appKey(x.ap)),...db.estatisticas.map(x=>appKey(x.ap))])].filter(Boolean).sort();
  options($('app'),appValues.map(k=>[k,appLabel(k)]),'Todas');
- updateSchool();render();
+ updateSchool();syncSchoolFilter();render();
 }
 function updateSchool(){const s=$('serie').value,a=$('area').value;const rows=db.escolas.filter(r=>(!s||serieKey(r.s)===s)&&(!a||r.a===a));const names=[...new Set(rows.map(r=>r.e))].sort((a,b)=>a.localeCompare(b,'pt-BR'));options($('school'),names.map(x=>[x,x]),'Todas')}
+
+function syncSchoolFilter(){
+ const active=$('useSchools').checked;
+ $('schoolFilterField').hidden=!active;
+ $('school').disabled=!active;
+ if(!active)$('school').value='';
+}
+async function loadSchoolRows(){
+ if(!$('useSchools').checked||schoolRows)return;
+ if(schoolPromise)return schoolPromise;
+ schoolError='';
+ schoolPromise=fetch('04_dados_escolas.json',{cache:'no-store'}).then(r=>{
+  if(!r.ok)throw Error('Base escolar indisponível (HTTP '+r.status+')');
+  return r.json();
+ }).then(data=>{
+  if(!Array.isArray(data.registros)||!Array.isArray(data.escolas)||!Array.isArray(data.aplicacoes)||!Array.isArray(data.habilidades))throw Error('Base escolar incompatível');
+  schoolRows=data.registros.map(r=>{
+   const skill=data.habilidades[r[4]],ap=data.aplicacoes[r[2]];
+   return {s:r[0],a:r[1],ap,e:data.escolas[r[3]],h:String(skill?.[0]||''),d:String(skill?.[1]||''),v:r[5]};
+  }).filter(r=>r.s&&r.a&&r.ap&&r.e&&r.h&&Number.isFinite(Number(r.v)));
+  if(!schoolRows.length&&db.escolas.length)throw Error('Base escolar sem habilidades individuais');
+ }).catch(e=>{schoolError=e.message||String(e);throw e}).finally(()=>{schoolPromise=null});
+ return schoolPromise;
+}
+function groupSchoolRows(rows){
+ const bySchool=new Map();
+ for(const r of rows){
+  if(!bySchool.has(r.e))bySchool.set(r.e,new Map());
+  const groups=bySchool.get(r.e),key=r.s+'|'+r.a+'|'+r.ap;
+  if(!groups.has(key))groups.set(key,{s:r.s,a:r.a,ap:r.ap,rows:[]});
+  groups.get(key).rows.push(r);
+ }
+ return [...bySchool.entries()].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([name,sets])=>({
+  name,groups:[...sets.values()].sort((a,b)=>Number(serieKey(a.s))-Number(serieKey(b.s))||a.a.localeCompare(b.a)||a.ap.localeCompare(b.ap)).map(g=>({...g,rows:g.rows.sort((a,b)=>a.h.localeCompare(b.h,'pt-BR',{numeric:true}))}))
+ }));
+}
 function gather(){
  const application=$('app').value;
  const editions=db.edicoes.filter(x=>!application||appKey(x.label)===application);
  const hist=$('useHistory').checked?db.habilidades.filter(r=>(!$('serie').value||serieKey(r.s)===$('serie').value)&&(!$('area').value||r.a===$('area').value)&&editions.some(e=>r.v[e.key]!=null)):[];
- const school=$('useSchools').checked?db.escolas.filter(r=>matches(r,true)):[];
+ const school=$('useSchools').checked&&schoolRows?schoolRows.filter(r=>matches(r,true)):[];
  const stats=$('useDisp').checked?db.estatisticas.filter(r=>matches(r)):[];
  return {hist,school,stats,editions};
 }
@@ -94,18 +130,27 @@ function table(headers,rows){const wrap=document.createElement('div');wrap.class
 function render(){
  if(!db)return;
  const data=gather(),total=data.hist.length+data.school.length+data.stats.length;
- $('summary').textContent=total+' registro(s) selecionado(s)';
- $('count').textContent=total+' registro(s)';
- $('generate').disabled=!total;
+ const waiting=$('useSchools').checked&&!schoolRows;
+ $('summary').textContent=schoolError&&$('useSchools').checked?'Erro no comparativo escolar: '+schoolError:waiting?'Carregando habilidades por escola…':total+' registro(s) selecionado(s)';
+ $('count').textContent=waiting?'Aguardando dados por escola':total+' registro(s)';
+ $('generate').disabled=!total||waiting;
  $('preview').replaceChildren();
  const top=document.createElement('div');top.className='document-head';const st=document.createElement('strong');st.textContent='Relatório educacional · '+db.base;top.append(st);$('preview').append(top);
  function section(title,headers,rows){if(!rows.length)return;const box=document.createElement('section');box.className='mini';const h=document.createElement('h3');h.textContent=title+' · '+rows.length+' registro(s)';box.append(h,table(headers,rows));$('preview').append(box)}
  section('Histórico de habilidades',['Série','Área','Habilidade','Descritor',...data.editions.map(e=>e.label)],data.hist.map(r=>[r.s,r.a,r.h,r.d,...data.editions.map(e=>pc(r.v[e.key]))]));
- section('Comparativo por escola',['Série','Área','Aplicação','Escola','Média','Habilidades'],data.school.map(r=>[r.s,r.a,r.ap,r.e,r.v.toLocaleString('pt-BR')+'%',r.n]));
+ if(data.school.length){
+  const grouped=groupSchoolRows(data.school);
+  for(const entry of grouped.slice(0,3)){
+   for(const g of entry.groups.slice(0,2))section('Escola: '+entry.name+' · '+g.s+' / '+g.a+' / '+g.ap,['Habilidade','Descritor','Resultado'],g.rows.map(r=>[r.h,r.d||'—',r.v.toLocaleString('pt-BR')+'%']));
+  }
+  if(grouped.length>3){const note=document.createElement('p');note.className='note';note.textContent='Prévia das 3 primeiras escolas. O PDF inclui todas as '+grouped.length+' escolas selecionadas.';$('preview').append(note)}
+ }
  section('Dispersão de estudantes',['Tipo','Série','Área','Aplicação','n','Média','Mediana','DP'],data.stats.map(r=>[r.tipo,r.s,r.a,r.ap,r.n,r.media,r.mediana,r.dp]));
  if(!total){const x=document.createElement('div');x.className='empty';x.textContent='Não há registros para a seleção atual. Ajuste os filtros ou o conteúdo escolhido.';$('preview').append(x)}
 }
-inputs.forEach(id=>$(id).addEventListener('change',()=>{$('downloadArea').style.display='none';$('pdfPreview').removeAttribute('src');if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}if(id==='serie'||id==='area')updateSchool();render()}));
+function resetPDF(){$('downloadArea').style.display='none';$('pdfPreview').removeAttribute('src');if(lastUrl){URL.revokeObjectURL(lastUrl);lastUrl=null;}}
+inputs.filter(id=>id!=='useSchools').forEach(id=>$(id).addEventListener('change',()=>{resetPDF();if(id==='serie'||id==='area')updateSchool();render()}));
+$('useSchools').addEventListener('change',async()=>{resetPDF();syncSchoolFilter();render();if($('useSchools').checked){try{await loadSchoolRows()}catch(e){console.error('Dados escolares',e)}render()}});
 function pdfStr(value){return String(value??'').replace(/[\u2012-\u2015]/g,'-').replace(/\u2026/g,'...').replace(/\u00a0/g,' ').replace(/[^\u0020-\u007e\u00a1-\u00ff]/g,'?').replace(/[\\()]/g,'\\$&')}
 function toBytes(s){const a=[];for(let i=0;i<s.length;i++){const code=s.charCodeAt(i);a.push(code<256?code:63)}return Uint8Array.from(a)}
 function pdfFile(data){
@@ -137,7 +182,17 @@ function pdfFile(data){
    const widths=[46,25,57,170,...shown.map(()=>53)];
    table('Histórico de habilidades',['Série','Área','Código','Descritor',...names],data.hist.map(r=>[r.s,r.a,r.h,r.d,...shown.map(e=>pc(r.v[e.key]))]),widths,7.5);
  }
- if(data.school.length)table('Comparativo por escola',['Série','Área','Aplicação','Escola','Média','n'],data.school.map(r=>[r.s,r.a,r.ap,r.e,r.v.toLocaleString('pt-BR')+'%',r.n]),[43,29,85,255,47,25],7.5);
+ if(data.school.length){
+  const schools=groupSchoolRows(data.school);
+  for(const [i,sch] of schools.entries()){
+   // Uma escola por seção; habilidades identificadas sem mistura de médias entre escolas.
+   if(i>0||data.hist.length||y<H-175)addPage();
+   ensure(60);
+   for(const line of wrapText('ESCOLA: '+sch.name,RIGHT-M-8,10,3)){txt(line,M,y,10,true);y-=14}
+   y-=12;
+   for(const g of sch.groups)table(g.s+' | '+g.a+' | '+g.ap,['Habilidade','Descritor','Resultado'],g.rows.map(r=>[r.h,r.d||'—',r.v.toLocaleString('pt-BR')+'%']),[80,330,66],7.5);
+  }
+ }
  if(data.stats.length)table('Dispersão · resumo estatístico',['Tipo','Área','Série','Aplicação','n','Média','Mediana','DP','CV %'],data.stats.map(r=>[r.tipo,r.a,r.s,r.ap,r.n,r.media,r.mediana,r.dp,r.cv]),[35,25,46,138,40,36,40,36,36],7.3);
  pages.forEach((p,i)=>p.cmd.push('BT /F1 8 Tf 1 0 0 1 '+(RIGHT-90)+' 28 Tm ('+pdfStr('Página '+(i+1)+' de '+pages.length)+') Tj ET'));
  const objects=['<< /Type /Catalog /Pages 2 0 R >>','','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
