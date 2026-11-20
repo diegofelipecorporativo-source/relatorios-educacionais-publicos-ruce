@@ -3,284 +3,173 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Impressão e PDF | Relatórios educacionais</title>
+<title>Impressão e PDF</title>
 <style>
-:root{--green:#047857;--ink:#21352d;--muted:#68786f;--line:#dae5de;--bg:#f7faf8}
-*{box-sizing:border-box}
-body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg)}
-main{max-width:1180px;margin:0 auto;padding:24px 20px 48px}
-h1{font-size:25px;font-weight:750;letter-spacing:-.035em;margin:0 0 4px}
-header p{margin:0;color:var(--muted)}
-.panel{margin-top:17px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:13px}
-h2{font-size:14px;font-weight:700;margin:0 0 14px}
-.modes{display:flex;flex-wrap:wrap;gap:8px}
-.modes button{background:#fff;border:1px solid #cfddd4;border-radius:9px;padding:11px 16px;color:#355348;font:650 14px system-ui,Arial;cursor:pointer}
-.modes button[aria-selected=true]{background:#047857;border-color:#047857;color:white}
-.modes button:focus-visible,select:focus-visible,input:focus-visible,.download:focus-visible{outline:3px solid #9adebb;outline-offset:2px}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.field{min-width:0}
-label{display:block;font-weight:650;margin:0 0 6px;font-size:12px;color:#465b51}
-select,input[type=text]{width:100%;height:41px;border:1px solid #cbdad0;border-radius:8px;color:#21352d;background:white;padding:8px 10px;font:14px system-ui,Arial}
-select{cursor:pointer;overflow:hidden;text-overflow:ellipsis}
-[hidden]{display:none!important}
-.bottom{margin-top:16px;display:flex;gap:12px;justify-content:space-between;align-items:end;flex-wrap:wrap}
-.title-field{flex:1 1 300px;max-width:580px}
-.download{border:0;border-radius:9px;background:#047857;color:#fff;font:700 14px system-ui,Arial;padding:12px 23px;cursor:pointer;white-space:nowrap}
-.download:disabled{opacity:.6;cursor:default}
-.note{color:var(--muted);font-size:12px;margin:7px 0 0}
-.preview-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
-.preview-head h2{margin:0}
-#count{font-size:13px;color:#52665c}
-.scroll{overflow:auto;max-height:365px;border:1px solid #e3ebe5;border-radius:8px}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;background:#f2f7f4;color:#445c50;position:sticky;top:0;white-space:nowrap}
-th,td{padding:10px 11px;border-bottom:1px solid #edf1ee;vertical-align:top}
-td{max-width:380px}
-tbody tr:last-child td{border-bottom:0}
-#status{margin-top:10px;min-height:20px;font-size:12px;color:#63766c}
-@media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:470px){main{padding:15px 12px 28px}.panel{padding:14px}.grid{grid-template-columns:1fr}.modes{display:grid;grid-template-columns:1fr}.modes button{text-align:left}.download{width:100%}}
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#1e302b;background:#f7faf8}
+*{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:24px 18px 50px}
+h1{font-size:clamp(22px,3vw,28px);font-weight:750;letter-spacing:-.025em;margin:0 0 4px}
+p{margin:5px 0 0;color:#64756d;line-height:1.55;font-size:13px}
+h2{font-size:15px;margin:0 0 14px;font-weight:700}.panel{background:white;border:1px solid #dce6df;border-radius:14px;padding:19px;margin-top:16px}
+.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.option{border:1px solid #dce6df;border-radius:10px;padding:13px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;min-width:0}
+.option:has(input:checked){border-color:#0c7d59;background:#f4fbf7}.option input{accent-color:#047857;width:18px;height:18px;flex:none;margin:1px 0 0}
+.option strong{display:block;font-size:13px}.option small{display:block;color:#64756d;margin-top:3px;font-size:11px}
+.filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.filters label{display:block;font-size:12px;font-weight:700;margin:0 0 6px}
+select{width:100%;min-width:0;border:1px solid #cad8cf;border-radius:9px;background:white;color:#1e302b;font:inherit;font-size:13px;padding:10px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap}
+button{background:#047857;color:#fff;border:0;border-radius:9px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer}
+button:disabled{background:#9cafaa;cursor:wait}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #80d6b3;outline-offset:2px}
+.status{font-size:12px;color:#506b5e}.preview-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.summary{font-size:12px;color:#62746b}.document{border:1px solid #e4ebe7;background:white;margin-top:13px;overflow:hidden;border-radius:9px}
+.document-head{padding:13px 16px;background:#f9fbfa;border-bottom:1px solid #e4ebe7}
+.document-head strong{font-size:14px}.mini{padding:14px 16px;border-bottom:1px solid #eef1ef}
+.mini:last-child{border-bottom:0}.mini h3{font-size:13px;margin:0 0 8px}.mini p{margin:0}
+.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:430px;font-size:11px}
+th,td{text-align:left;border-bottom:1px solid #eef1ef;padding:8px 7px;vertical-align:top}
+th{background:#f8faf9;color:#3d554a;font-weight:750}.empty{padding:24px;color:#71827a;text-align:center;font-size:13px}
+#downloadArea{display:none;margin-top:14px}#downloadArea a{font-weight:650;color:#047857}
+#pdfPreview{width:100%;height:450px;border:1px solid #dce6df;border-radius:8px;margin-top:9px;display:none}
+#morePreview{cursor:pointer;color:#325544;font-size:12px}
+@media(max-width:780px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.options{grid-template-columns:1fr}main{padding:16px 12px 30px}.panel{padding:14px}}
+@media(max-width:390px){.filters{grid-template-columns:1fr}}
+@media print{main{padding:0}.panel:first-of-type,.toolbar,#downloadArea{display:none!important}.panel{border:0;padding:0}.document{border:0}table{min-width:0}}
 </style>
 </head>
 <body>
 <main>
-<header><h1>Impressão e PDF</h1><p>Escolha os dados, aplique os filtros desejados e baixe o relatório em PDF.</p></header>
-<section class="panel" aria-label="Tipo de relatório">
-  <h2>Tipo de relatório</h2>
-  <div class="modes" role="tablist" aria-label="Relatórios disponíveis">
-    <button type="button" data-mode="historico" role="tab" aria-selected="true">Histórico de habilidades</button>
-    <button type="button" data-mode="escolas" role="tab" aria-selected="false">Comparativo por escola</button>
-    <button type="button" data-mode="estudantes" role="tab" aria-selected="false">Resultados dos estudantes</button>
-  </div>
+<header><h1>Impressão e PDF</h1><p>Escolha o conteúdo, ajuste os filtros e gere o documento. Sem etapas intermediárias e sem análises automáticas.</p></header>
+<section class="panel" aria-label="Preparar documento">
+<h2>O que incluir no relatório?</h2>
+<div class="options">
+<label class="option"><input type="checkbox" id="useHistory" checked><span><strong>Histórico de habilidades</strong><small>Habilidades e resultados por aplicação</small></span></label>
+<label class="option"><input type="checkbox" id="useSchools"><span><strong>Comparativo por escola</strong><small>Médias das habilidades por unidade escolar</small></span></label>
+<label class="option"><input type="checkbox" id="useDisp"><span><strong>Dispersão de estudantes</strong><small>Resumo estatístico por série e aplicação</small></span></label>
+</div>
+<div class="filters">
+<div><label for="serie">Série</label><select id="serie"><option value="">Todas</option></select></div>
+<div><label for="area">Componente</label><select id="area"><option value="">Todos</option><option value="LP">Língua Portuguesa</option><option value="MT">Matemática</option></select></div>
+<div><label for="app">Aplicação</label><select id="app"><option value="">Todas</option></select></div>
+<div><label for="school">Escola <span style="font-weight:400;color:#76847d">(comparativo)</span></label><select id="school"><option value="">Todas</option></select></div>
+</div>
+<div class="toolbar"><span id="summary" class="status" role="status" aria-live="polite">Preparando dados do relatório…</span><button id="generate" type="button" disabled>Gerar PDF</button></div>
+<div id="downloadArea" aria-live="polite"><p>PDF preparado. Se o navegador não iniciar o download, <a href="#" id="downloadAgain" download="relatorio.pdf">baixe o arquivo aqui</a>.</p><details style="margin-top:8px"><summary id="morePreview">Visualizar o PDF</summary><iframe id="pdfPreview" title="Prévia do PDF"></iframe></details></div>
 </section>
-<section class="panel" aria-label="Filtros e exportação">
-  <h2>Dados do documento</h2>
-  <div class="grid">
-    <div class="field"><label for="serie">Série</label><select id="serie"></select></div>
-    <div class="field"><label for="area">Componente curricular</label><select id="area"></select></div>
-    <div class="field"><label for="aplicacao">Aplicação</label><select id="aplicacao"></select></div>
-    <div class="field" id="escolaField" hidden><label for="escola">Escola</label><select id="escola"></select></div>
-    <div class="field" id="tabelaField" hidden><label for="tabela">Informações</label><select id="tabela"><option value="resumo">Resumo estatístico</option><option value="niveis">Níveis de aprendizagem</option></select></div>
-  </div>
-  <div class="bottom">
-    <div class="title-field"><label for="titulo">Título do relatório</label><input id="titulo" type="text" maxlength="110" value="Relatório educacional"></div>
-    <button type="button" id="download" class="download" disabled>Baixar PDF</button>
-  </div>
-  <p class="note">O arquivo PDF é gerado neste dispositivo, sem abrir outro painel ou enviar informações a um servidor.</p>
-  <div id="status" role="status" aria-live="polite">Preparando os dados...</div>
-</section>
-<section class="panel" aria-label="Prévia das informações">
-  <div class="preview-head"><h2>Prévia dos resultados</h2><span id="count"></span></div>
-  <div class="scroll"><table><thead id="previewHead"></thead><tbody id="previewBody"><tr><td>Carregando informações...</td></tr></tbody></table></div>
-  <p class="note">A prévia mostra até oito registros. O PDF inclui todos os registros que atendem aos filtros.</p>
+<section class="panel" aria-label="Prévia dos dados">
+<div class="preview-heading"><h2 style="margin:0">Prévia dos dados</h2><span class="summary" id="count"></span></div>
+<div class="document" id="preview"><div class="empty">Carregando dados compactos…</div></div>
+<p>O PDF contém os registros correspondentes aos filtros, não apenas as linhas exibidas nesta prévia.</p>
 </section>
 </main>
 <script>
-(function(){
-"use strict";
-var $=function(id){return document.getElementById(id)};
-var paths={historico:"04_dados_historico.json",escolas:"04_dados_escolas.json",estudantes:"04_dados_estudantes.json"};
-var defaults={historico:"Histórico de habilidades",escolas:"Comparativo de habilidades por escola",estudantes:"Resultados dos estudantes"};
-var store={},mode="historico",view=null,loadedMode=null,seq=0;
-var collator=new Intl.Collator("pt-BR",{numeric:true,sensitivity:"base"});
-function say(message){$("status").textContent=message}
-function distinct(items){return [...new Set(items.filter(x=>x!==null&&x!==undefined&&String(x)!==""))].sort(collator.compare)}
-function setOptions(id,pairs,allLabel){var el=$(id),prev=el.value;el.replaceChildren();var base=document.createElement("option");base.value="";base.textContent=allLabel;el.append(base);pairs.forEach(function(pair){var opt=document.createElement("option");opt.value=pair[0];opt.textContent=pair[1];el.append(opt)});if([...el.options].some(x=>x.value===prev))el.value=prev;else el.value=""}
-function stringsOptions(list){return distinct(list).map(x=>[String(x),String(x)])}
-function fillFilters(data){
-  $("serie").value="";$("area").value="";$("aplicacao").value="";$("escola").value="";$("tabela").value="resumo";
-  $("escolaField").hidden=mode!=="escolas";
-  $("tabelaField").hidden=mode!=="estudantes";
-  if(mode==="historico"){
-    setOptions("serie",stringsOptions(data.registros.map(r=>r[0])),"Todas as séries");
-    setOptions("area",stringsOptions(data.registros.map(r=>r[1])),"Todos");
-    setOptions("aplicacao",data.edicoes.map(e=>[e.key,e.label]),"Todas as aplicações");
-  }else if(mode==="escolas"){
-    setOptions("serie",stringsOptions(data.series),"Todas as séries");
-    setOptions("area",stringsOptions(["LP","MT"]),"Todos");
-    setOptions("aplicacao",stringsOptions(data.aplicacoes),"Todas as aplicações");
-    setOptions("escola",stringsOptions(data.escolas),"Todas as escolas");
-  }else{
-    var rows=data.resumo.registros.concat(data.niveis.registros);
-    setOptions("serie",stringsOptions(rows.map(r=>r[2])),"Todas as séries");
-    setOptions("area",stringsOptions(rows.map(r=>r[1]==="LP"||r[1]==="MT"?r[1]:r[0]).filter(x=>x==="LP"||x==="MT")),"Todos");
-    setOptions("aplicacao",stringsOptions(rows.map(r=>r[3])),"Todas as aplicações");
-  }
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),inputs=['serie','area','app','school','useHistory','useSchools','useDisp'];
+let db=null,lastUrl=null;
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/_/g,' ').replace(/\s+/g,' ').trim();
+const serieKey=s=>(String(s||'').match(/\d+/)||[''])[0];
+const appKey=s=>{const t=norm(s);const year=(t.match(/20\d\d/)||[''])[0];let kind=t.includes('intermediaria')||/\bavi\b/.test(t)?'i':t.includes('saida')||/\bavs\b/.test(t)?'s':t.includes('entrada')||/\bave\b/.test(t)?'e':t.includes('2025')||t.includes('2026')?'o':'';return year&&kind?year+'-'+kind:''};
+const appLabel=k=>{const [year,t]=k.split('-');return(t==='e'?'Entrada':t==='s'?'Saída':t==='i'?'Intermediária':'Outra')+' '+year};
+const matches=(r,school=false)=>{const s=$('serie').value,a=$('area').value,p=$('app').value,e=$('school').value;return (!s||serieKey(r.s)===s)&&(!a||r.a===a)&&(!p||appKey(r.ap)===p)&&(!school||!e||r.e===e)};
+const pc=v=>v==null||!Number.isFinite(Number(v))?'—':(Number(v)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+const val=v=>v==null?'—':String(v);
+function options(el,values,placeholder){const selected=el.value;el.replaceChildren(new Option(placeholder,''));values.forEach(([v,t])=>el.add(new Option(t,v)));if(values.some(([v])=>v===selected))el.value=selected}
+function init(){
+ const series=[...new Set([...db.habilidades.map(x=>serieKey(x.s)),...db.escolas.map(x=>serieKey(x.s)),...db.estatisticas.map(x=>serieKey(x.s))])].filter(Boolean).sort((a,b)=>+a-+b);
+ options($('serie'),series.map(s=>[s,s+'º ano']),'Todas');
+ const appValues=[...new Set([...db.edicoes.map(x=>appKey(x.label)),...db.escolas.map(x=>appKey(x.ap)),...db.estatisticas.map(x=>appKey(x.ap))])].filter(Boolean).sort();
+ options($('app'),appValues.map(k=>[k,appLabel(k)]),'Todas');
+ updateSchool();render();
 }
-function ratio(x){return x===null||x===undefined?"—":(Number(x)*100).toLocaleString("pt-BR",{maximumFractionDigits:1,minimumFractionDigits:1})+"%"}
-function percent(x){return x===null||x===undefined?"—":Number(x).toLocaleString("pt-BR",{maximumFractionDigits:1,minimumFractionDigits:1})+"%"}
-function build(){
- var data=store[mode],serie=$("serie").value,area=$("area").value,ap=$("aplicacao").value,escola=$("escola").value;
- if(!data)return null;
- var headers=[],rows=[],weights=[];
- if(mode==="historico"){
-   var ed=data.edicoes.map((v,i)=>({edition:v,index:i})).filter(x=>!ap||x.edition.key===ap);
-   headers=["Série","Área","Habilidade","Descrição"].concat(ed.map(x=>x.edition.label));
-   weights=[.9,.55,1.05,4.4].concat(ed.map(()=>.92));
-   rows=data.registros.filter(r=>(!serie||r[0]===serie)&&(!area||r[1]===area)&&(!ap||ed.some(x=>r[6+x.index]!==null&&r[6+x.index]!==undefined))).map(r=>[r[0],r[1],r[2],r[3]].concat(ed.map(x=>ratio(r[6+x.index]))));
- }else if(mode==="escolas"){
-   var schoolId=data.escolas.indexOf(escola);
-   if(escola){
-     headers=["Série","Área","Escola","Aplicação","Habilidade","Descrição","Resultado (%)"];
-     weights=[.75,.48,2.5,1.35,.85,3.2,.85];
-     rows=data.registros.filter(r=>r[2]===schoolId&&(!serie||r[0]===serie)&&(!area||r[1]===area)&&(!ap||data.aplicacoes[r[3]]===ap)).map(r=>[r[0],r[1],data.escolas[r[2]],data.aplicacoes[r[3]],data.habilidades[r[4]][0],data.habilidades[r[4]][1],percent(r[5])]);
-   }else{
-     headers=["Série","Área","Aplicação","Habilidade","Descrição","Média escolas (%)","Nº escolas"];
-     weights=[.85,.55,1.45,1.02,3.7,1.12,.85];
-     rows=data.medias.filter(r=>(!serie||r[0]===serie)&&(!area||r[1]===area)&&(!ap||data.aplicacoes[r[2]]===ap)).map(r=>[r[0],r[1],data.aplicacoes[r[2]],data.habilidades[r[3]][0],data.habilidades[r[3]][1],percent(r[4]),String(r[5])]);
-   }
- }else{
-   var isLevels=$("tabela").value==="niveis",t=isLevels?data.niveis:data.resumo;
-   var columns=isLevels?[0,1,2,3,4,5,7,8,9,10,11,12,13,14]:[0,1,2,3,4,5,6,7,8,9,10,11];
-   headers=columns.map(i=>t.colunas[i]);
-   weights=headers.map(h=>h==="Aplicação"?2.3:h==="Série"?1.05:h==="Tipo"?.7:h==="Nível"?1.3:h==="Escala"?.85:h==="Média"||h==="Mediana"?1.03:.75);
-   rows=t.registros.filter(r=>(!serie||r[2]===serie)&&(!area||(isLevels?r[0]:r[1])===area)&&(!ap||r[3]===ap)).map(r=>columns.map(i=>r[i]));
- }
- rows.sort(function(a,b){return collator.compare(a[0],b[0])||collator.compare(a[1],b[1])||collator.compare(a[2],b[2])||collator.compare(a[3],b[3])});
- return {headers:headers,weights:weights,rows:rows,base:data.base||"",name:defaults[mode]};
+function updateSchool(){const s=$('serie').value,a=$('area').value;const rows=db.escolas.filter(r=>(!s||serieKey(r.s)===s)&&(!a||r.a===a));const names=[...new Set(rows.map(r=>r.e))].sort((a,b)=>a.localeCompare(b,'pt-BR'));options($('school'),names.map(x=>[x,x]),'Todas')}
+function gather(){
+ const application=$('app').value;
+ const editions=db.edicoes.filter(x=>!application||appKey(x.label)===application);
+ const hist=$('useHistory').checked?db.habilidades.filter(r=>(!$('serie').value||serieKey(r.s)===$('serie').value)&&(!$('area').value||r.a===$('area').value)&&editions.some(e=>r.v[e.key]!=null)):[];
+ const school=$('useSchools').checked?db.escolas.filter(r=>matches(r,true)):[];
+ const stats=$('useDisp').checked?db.estatisticas.filter(r=>matches(r)):[];
+ return {hist,school,stats,editions};
 }
+function table(headers,rows){const wrap=document.createElement('div');wrap.className='tablewrap';const t=document.createElement('table');const head=document.createElement('thead'),tr=document.createElement('tr');headers.forEach(h=>{const th=document.createElement('th');th.textContent=h;tr.append(th)});head.append(tr);t.append(head);const tb=document.createElement('tbody');rows.slice(0,6).forEach(row=>{const tr=document.createElement('tr');row.forEach(x=>{const td=document.createElement('td');td.textContent=String(x??'—');tr.append(td)});tb.append(tr)});t.append(tb);wrap.append(t);return wrap}
 function render(){
- if(!store[mode])return;
- view=build();
- var head=$("previewHead"),body=$("previewBody");head.replaceChildren();body.replaceChildren();
- var tr=document.createElement("tr");view.headers.forEach(function(h){var th=document.createElement("th");th.textContent=h;tr.append(th)});head.append(tr);
- view.rows.slice(0,8).forEach(function(r){var tr=document.createElement("tr");r.forEach(function(v){var td=document.createElement("td");td.textContent=v===null?"—":String(v);tr.append(td)});body.append(tr)});
- if(!view.rows.length){var empty=document.createElement("tr"),td=document.createElement("td");td.colSpan=view.headers.length;td.textContent="Nenhum registro encontrado com os filtros selecionados.";empty.append(td);body.append(empty)}
- $("count").textContent=view.rows.length.toLocaleString("pt-BR")+" registro(s)";
- $("download").disabled=!view.rows.length;
- say(view.base+" · Os filtros são aplicados automaticamente.");
+ if(!db)return;
+ const data=gather(),total=data.hist.length+data.school.length+data.stats.length;
+ $('summary').textContent=total+' registro(s) selecionado(s)';
+ $('count').textContent=total+' registro(s)';
+ $('generate').disabled=!total;
+ $('preview').replaceChildren();
+ const top=document.createElement('div');top.className='document-head';const st=document.createElement('strong');st.textContent='Relatório educacional · '+db.base;top.append(st);$('preview').append(top);
+ function section(title,headers,rows){if(!rows.length)return;const box=document.createElement('section');box.className='mini';const h=document.createElement('h3');h.textContent=title+' · '+rows.length+' registro(s)';box.append(h,table(headers,rows));$('preview').append(box)}
+ section('Histórico de habilidades',['Série','Área','Habilidade','Descritor',...data.editions.map(e=>e.label)],data.hist.map(r=>[r.s,r.a,r.h,r.d,...data.editions.map(e=>pc(r.v[e.key]))]));
+ section('Comparativo por escola',['Série','Área','Aplicação','Escola','Média','Habilidades'],data.school.map(r=>[r.s,r.a,r.ap,r.e,r.v.toLocaleString('pt-BR')+'%',r.n]));
+ section('Dispersão de estudantes',['Tipo','Série','Área','Aplicação','n','Média','Mediana','DP'],data.stats.map(r=>[r.tipo,r.s,r.a,r.ap,r.n,r.media,r.mediana,r.dp]));
+ if(!total){const x=document.createElement('div');x.className='empty';x.textContent='Não há registros para a seleção atual. Ajuste os filtros ou o conteúdo escolhido.';$('preview').append(x)}
 }
-async function choose(which){
- mode=which;seq++;var own=seq,buttons=document.querySelectorAll("[data-mode]");
- buttons.forEach(b=>b.setAttribute("aria-selected",String(b.dataset.mode===mode)));
- $("titulo").value=defaults[mode];$("download").disabled=true;view=null;
- if(store[mode]){fillFilters(store[mode]);render();return}
- say("Carregando dados do relatório...");$("count").textContent="";$("previewHead").replaceChildren();$("previewBody").replaceChildren();
+inputs.forEach(id=>$(id).addEventListener('change',()=>{if(id==='serie'||id==='area')updateSchool();render()}));
+function pdfStr(value){return String(value??'').replace(/[\u2012-\u2015]/g,'-').replace(/\u2026/g,'...').replace(/\u00a0/g,' ').replace(/[^\u0020-\u007e\u00a1-\u00ff]/g,'?').replace(/[\\()]/g,'\\$&')}
+function toBytes(s){const a=[];for(let i=0;i<s.length;i++){const code=s.charCodeAt(i);a.push(code<256?code:63)}return Uint8Array.from(a)}
+function pdfFile(data){
+ const W=595.28,H=841.89,M=37,RIGHT=W-M;
+ const pages=[];let page,y;
+ function addPage(){page={cmd:[]};pages.push(page);y=H-43;txt('RELATÓRIO EDUCACIONAL',M,y,11,true);txt(db.base,RIGHT-190,y,9);rule(y-11);y-=35}
+ function txt(s,x,Y,size=9,bold=false){page.cmd.push('BT /F'+(bold?'2':'1')+' '+size+' Tf 1 0 0 1 '+x.toFixed(1)+' '+Y.toFixed(1)+' Tm ('+pdfStr(s)+') Tj ET')}
+ function rule(Y){page.cmd.push('0.83 G 0.6 w '+M+' '+Y.toFixed(1)+' m '+RIGHT+' '+Y.toFixed(1)+' l S 0 G')}
+ function ensure(h){if(y-h<55)addPage()}
+ function wrapText(text,width,size,maxLines=3){const words=String(text??'—').replace(/\s+/g,' ').trim().split(' '),out=[];let line='';const max=Math.max(3,Math.floor(width/(size*.50)));for(const word of words){const next=line?line+' '+word:word;if(next.length>max){if(line)out.push(line);line=word;while(line.length>max){out.push(line.slice(0,max));line=line.slice(max)}}else line=next}if(line)out.push(line);if(out.length>maxLines){out.length=maxLines;out[maxLines-1]=out[maxLines-1].slice(0,Math.max(1,max-3))+'...'}return out.length?out:['—']}
+ function table(title,labels,rows,widths,fs=8){
+   if(!rows.length)return;
+   ensure(45);txt(title,M,y,12,true);y-=21;
+   const sum=widths.reduce((a,b)=>a+b,0);const w=widths.map(v=>v/sum*(W-2*M));
+   function header(){ensure(28);page.cmd.push('0.94 g '+M+' '+(y-19).toFixed(1)+' '+(W-2*M)+' 23 re f 0 g');let x=M;labels.forEach((l,i)=>{txt(l,x+3,y-10,7,true);x+=w[i]});y-=25}
+   header();
+   for(const row of rows){const lines=row.map((value,i)=>wrapText(value,w[i]-6,fs,3));const h=Math.max(15,...lines.map(t=>t.length*(fs+2)+5));if(y-h<52){addPage();txt(title+' (continuação)',M,y,10,true);y-=20;header()}
+     let x=M;for(let i=0;i<row.length;i++){lines[i].forEach((part,j)=>txt(part,x+3,y-10-j*(fs+2),fs));x+=w[i]}
+     y-=h;rule(y+1);
+   }y-=20
+ }
+ addPage();
+ const date=new Date().toLocaleDateString('pt-BR');
+ txt('Emissão: '+date,M,y,8);y-=26;
+ const editions=data.editions;
+ if(data.hist.length){
+   const shown=editions.length<=4?editions:editions.slice(0,4);
+   const names=shown.map(e=>e.label.replace(/AVALIAÇÃO DE /gi,'').slice(0,17));
+   const widths=[46,25,57,170,...shown.map(()=>53)];
+   table('Histórico de habilidades',['Série','Área','Código','Descritor',...names],data.hist.map(r=>[r.s,r.a,r.h,r.d,...shown.map(e=>pc(r.v[e.key]))]),widths,7.5);
+ }
+ if(data.school.length)table('Comparativo por escola',['Série','Área','Aplicação','Escola','Média','n'],data.school.map(r=>[r.s,r.a,r.ap,r.e,r.v.toLocaleString('pt-BR')+'%',r.n]),[43,29,85,255,47,25],7.5);
+ if(data.stats.length)table('Dispersão · resumo estatístico',['Tipo','Área','Série','Aplicação','n','Média','Mediana','DP','CV %'],data.stats.map(r=>[r.tipo,r.a,r.s,r.ap,r.n,r.media,r.mediana,r.dp,r.cv]),[35,25,46,138,40,36,40,36,36],7.3);
+ pages.forEach((p,i)=>p.cmd.push('BT /F1 8 Tf 1 0 0 1 '+(RIGHT-90)+' 28 Tm ('+pdfStr('Página '+(i+1)+' de '+pages.length)+') Tj ET'));
+ const objects=['<< /Type /Catalog /Pages 2 0 R >>','','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
+ const ids=[];
+ for(const p of pages){const pageId=objects.length+1;ids.push(pageId);const content=p.cmd.join('\n');objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '+(pageId+1)+' 0 R >>');objects.push('<< /Length '+toBytes(content).length+' >>\nstream\n'+content+'\nendstream')}
+ objects[1]='<< /Type /Pages /Kids ['+ids.map(i=>i+' 0 R').join(' ')+'] /Count '+pages.length+' >>';
+ const parts=[],offsets=[0];let offset=0;
+ function push(s){const b=toBytes(s);parts.push(b);offset+=b.length}
+ push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+ objects.forEach((s,i)=>{offsets.push(offset);push((i+1)+' 0 obj\n'+s+'\nendobj\n')});
+ const start=offset;push('xref\n0 '+(objects.length+1)+'\n0000000000 65535 f \n');
+ for(let i=1;i<offsets.length;i++)push(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+ push('trailer\n<< /Size '+(objects.length+1)+' /Root 1 0 R >>\nstartxref\n'+start+'\n%%EOF');
+ return new Blob(parts,{type:'application/pdf'});
+}
+$('generate').addEventListener('click',()=>{
+ if(!db)return;const content=gather();if(!(content.hist.length+content.school.length+content.stats.length))return;
+ const btn=$('generate');btn.disabled=true;btn.textContent='Preparando PDF…';
  try{
-  var res=await fetch(paths[mode],{cache:"no-cache"});
-  if(!res.ok)throw new Error("HTTP "+res.status);
-  var data=await res.json();
-  if(own!==seq)return;
-  store[mode]=data;loadedMode=mode;fillFilters(data);render();
- }catch(e){if(own!==seq)return;say("Não foi possível carregar os dados. Atualize a página e tente novamente. ("+e.message+")");}
-}
-function cp1252(input){
- var special={8364:128,8218:130,402:131,8222:132,8230:133,8224:134,8225:135,710:136,8240:137,352:138,8249:139,338:140,381:142,8216:145,8217:146,8220:147,8221:148,8226:149,8211:150,8212:151,732:152,8482:153,353:154,8250:155,339:156,382:158,376:159};
- var result="";
- for(var ch of String(input)){var cp=ch.codePointAt(0);result+=String.fromCharCode(cp<=255?cp:(special[cp]||63))}
- return result;
-}
-function pdfEsc(str){return cp1252(str).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)").replace(/[\r\n]/g," ")}
-function wrapWords(value,limit,maxLines){
- var text=String(value===null||value===undefined?"—":value).replace(/\s+/g," ").trim();
- var words=text.split(" "),lines=[],line="";
- words.forEach(function(w){
-  while(w.length>limit){if(line){lines.push(line);line=""}lines.push(w.slice(0,limit));w=w.slice(limit)}
-  if(!w)return;
-  if(!line)line=w;
-  else if(line.length+1+w.length<=limit)line+=" "+w;
-  else {lines.push(line);line=w}
- });
- if(line)lines.push(line);
- if(!lines.length)lines=[""];
- if(lines.length>maxLines){lines=lines.slice(0,maxLines);lines[maxLines-1]=lines[maxLines-1].slice(0,Math.max(1,limit-2))+".."}
- return lines;
-}
-function makePdf(report,title,filterText){
- var PAGE_W=842,PAGE_H=595,M=34,TABLE_W=PAGE_W-2*M,cols=report.headers;
- var weightSum=report.weights.reduce((a,b)=>a+b,0);
- var widths=report.weights.map(x=>TABLE_W*x/weightSum);
- var xs=[],position=M;widths.forEach(function(w){xs.push(position);position+=w});
- var pages=[],commands=[],y=0,bodyCount=0;
- function rect(x,y,w,h,color){
-  commands.push(color+" rg "+x.toFixed(2)+" "+y.toFixed(2)+" "+w.toFixed(2)+" "+h.toFixed(2)+" re f");
- }
- function line(x1,y1,x2,y2){commands.push("0.85 0.89 0.87 RG 0.4 w "+x1.toFixed(2)+" "+y1.toFixed(2)+" m "+x2.toFixed(2)+" "+y2.toFixed(2)+" l S")}
- function text(x,y,string,size,bold,color){
-  commands.push("BT /F"+(bold?"2":"1")+" "+size.toFixed(1)+" Tf "+(color||"0.12 0.21 0.16")+" rg 1 0 0 1 "+x.toFixed(2)+" "+y.toFixed(2)+" Tm ("+pdfEsc(string)+") Tj ET");
- }
- function header(){
-  rect(0,532,PAGE_W,63,"0.95 0.98 0.96");
-  text(M,561,title.slice(0,110),15,true);
-  text(M,541,(report.base+" · "+report.name).slice(0,140),8,false,"0.37 0.45 0.41");
-  text(M,521,filterText.slice(0,150),8,false,"0.32 0.40 0.36");
-  rect(M,488,TABLE_W,25,"0.88 0.94 0.90");
-  var x=M;
-  cols.forEach(function(h,i){
-   var size=cols.length>12?6.5:7.5;
-   var limit=Math.max(4,Math.floor((widths[i]-7)/(size*.51)));
-   text(x+4,497,wrapWords(h,limit,1)[0],size,true);
-   x+=widths[i];
-  });
-  y=487;
- }
- function newPage(){
-  commands=[];
-  pages.push(commands);
-  header();
- }
- newPage();
- report.rows.forEach(function(row,index){
-  var lines=row.map(function(value,i){
-   var size=cols.length>12?6.2:7.2;
-   var maxChars=Math.max(4,Math.floor((widths[i]-8)/(size*.51)));
-   return wrapWords(value,maxChars,4);
-  });
-  var height=Math.max(19,Math.max.apply(null,lines.map(x=>x.length))*10+7);
-  if(y-height<43)newPage();
-  if(index%2===1)rect(M,y-height,TABLE_W,height,"0.975 0.984 0.979");
-  lines.forEach(function(valueLines,i){valueLines.forEach(function(part,k){text(xs[i]+4,y-12-k*9,part,cols.length>12?6.2:7.2,false)})});
-  line(M,y-height,PAGE_W-M,y-height);
-  y-=height;
-  bodyCount++;
- });
- pages.forEach(function(cmd,i){var old=commands;commands=cmd;text(PAGE_W-M-82,22,"Página "+(i+1)+" / "+pages.length,8,false,"0.40 0.49 0.43");commands=old});
- var objects=["<< /Type /Catalog /Pages 2 0 R >>","","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>","<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
- var pageIds=[];
- pages.forEach(function(cmd){
-  var stream=cmd.join("\n")+"\n",sObj=objects.length+1;objects.push("<< /Length "+stream.length+" >>\nstream\n"+stream+"endstream");
-  var pObj=objects.length+1;objects.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+PAGE_W+" "+PAGE_H+"] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+sObj+" 0 R >>");
-  pageIds.push(pObj+" 0 R");
- });
- objects[1]="<< /Type /Pages /Kids ["+pageIds.join(" ")+"] /Count "+pages.length+" >>";
- var output="%PDF-1.4\n%\xE2\xE3\xCF\xD3\n",offsets=[];
- objects.forEach(function(obj,i){offsets.push(output.length);output+=(i+1)+" 0 obj\n"+obj+"\nendobj\n"});
- var xref=output.length;
- output+="xref\n0 "+(objects.length+1)+"\n0000000000 65535 f \n";
- offsets.forEach(function(off){output+=String(off).padStart(10,"0")+" 00000 n \n"});
- output+="trailer\n<< /Size "+(objects.length+1)+" /Root 1 0 R >>\nstartxref\n"+xref+"\n%%EOF";
- return Uint8Array.from(output,function(char){return char.charCodeAt(0)&255});
-}
-function filtersText(){
- var pairs=[["Série",$("serie")],["Área",$("area")],["Aplicação",$("aplicacao")]];
- if(mode==="escolas")pairs.push(["Escola",$("escola")]);
- if(mode==="estudantes")pairs.push(["Tabela",$("tabela")]);
- return pairs.map(function(item){return item[0]+": "+(item[1].selectedOptions[0]?.text||"Todas")}).join("  ·  ");
-}
-function download(){
- if(!view||!view.rows.length)return;
- var button=$("download");button.disabled=true;button.textContent="Gerando PDF...";
- say("Organizando "+view.rows.length.toLocaleString("pt-BR")+" registros...");
- setTimeout(function(){
-  try{
-   var title=$("titulo").value.trim()||defaults[mode];
-   var bytes=makePdf(view,title,filtersText());
-   var blob=new Blob([bytes],{type:"application/pdf"});
-   var url=URL.createObjectURL(blob);
-   var a=document.createElement("a");
-   var simple=title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9-_ ]/g,"").trim().replace(/\s+/g,"_").slice(0,45);
-   a.download=(simple||"relatorio")+".pdf";a.href=url;document.body.append(a);a.click();a.remove();
-   setTimeout(function(){URL.revokeObjectURL(url)},60000);
-   say("PDF preparado. Verifique a pasta de downloads do navegador.");
-  }catch(e){say("Falha ao gerar o PDF: "+e.message);console.error(e)}
-  button.textContent="Baixar PDF";button.disabled=false;
- },40);
-}
-document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",function(){if(mode!==b.dataset.mode)choose(b.dataset.mode)}));
-["serie","area","aplicacao","escola"].forEach(id=>$(id).addEventListener("change",render));
-$("tabela").addEventListener("change",render);
-$("download").addEventListener("click",download);
-choose("historico");
+   const blob=pdfFile(content);
+   if(lastUrl)URL.revokeObjectURL(lastUrl);
+   lastUrl=URL.createObjectURL(blob);
+   const file='relatorio_'+db.project.toLowerCase()+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+   const a=$('downloadAgain');a.href=lastUrl;a.download=file;
+   $('downloadArea').style.display='block';
+   $('pdfPreview').src=lastUrl;$('pdfPreview').style.display='block';
+   const link=document.createElement('a');link.href=lastUrl;link.download=file;link.style.display='none';document.body.append(link);link.click();link.remove();
+   $('summary').textContent='PDF preparado. Caso não baixe automaticamente, use o link logo abaixo.';
+ }catch(e){$('summary').textContent='Não foi possível gerar o PDF: '+e.message;console.error(e)}
+ finally{btn.disabled=false;btn.textContent='Gerar PDF'}
+});
+fetch('dados_impressao.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Base de impressão indisponível (HTTP '+r.status+')');return r.json()}).then(x=>{db=x;init()}).catch(e=>{$('summary').textContent='Erro ao carregar dados: '+e.message;$('preview').textContent='Não foi possível carregar a base compacta.'});
 })();
 </script>
 </body>
